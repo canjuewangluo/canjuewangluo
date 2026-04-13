@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#60A5FA',
+                        cta: '#F97316',
+                        background: '#F8FAFC',
+                        text: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Fira Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Fira Sans', sans-serif; }
+        .sidebar-item { transition: all 0.2s ease; }
+        .sidebar-item:hover { background: rgba(59, 130, 246, 0.1); }
+        .sidebar-item.active { background: rgba(59, 130, 246, 0.15); border-right: 3px solid #3B82F6; }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .time-btn { transition: all 0.2s ease; }
+        .time-btn.active { background: #3B82F6; color: white; }
+        .login-input:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+    </style>
+</head>
+<body class="bg-background min-h-screen">
+
+    <!-- 登录页面 -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-white text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-text">后台管理系统</h1>
+                <p class="text-slate-500 mt-2">请登录您的管理员账号</p>
+            </div>
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">管理员账号</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="username" placeholder="请输入账号" 
+                            class="login-input w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-primary transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">密码</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="password" id="password" placeholder="请输入密码" 
+                            class="login-input w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-primary transition-all">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary">
+                        <span class="ml-2 text-slate-600">记住我</span>
+                    </label>
+                    <a href="#" class="text-primary hover:underline">忘记密码？</a>
+                </div>
+                <button type="submit" 
+                    class="w-full bg-primary hover:bg-blue-600 text-white font-medium py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <span>登录系统</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            <p id="loginError" class="text-red-500 text-sm text-center mt-4 hidden">账号或密码错误，请重试</p>
+        </div>
+    </div>
+
+    <!-- 主控制台 -->
+    <div id="dashboard" class="hidden min-h-screen flex">
+        <!-- 左侧侧边栏 -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
+            <!-- Logo区域 -->
+            <div class="p-5 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-text">数据分析</h1>
+                        <p class="text-xs text-slate-400">后台管理系统</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 时间筛选 -->
+            <div class="p-4 border-b border-slate-200">
+                <p class="text-xs text-slate-500 mb-3 font-medium">时间范围</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="time-btn active text-sm py-2 px-3 rounded-lg border border-slate-200 cursor-pointer" data-range="today">今天</button>
+                    <button class="time-btn text-sm py-2 px-3 rounded-lg border border-slate-200 cursor-pointer" data-range="yesterday">昨天</button>
+                    <button class="time-btn text-sm py-2 px-3 rounded-lg border border-slate-200 cursor-pointer" data-range="week">最近7天</button>
+                    <button class="time-btn text-sm py-2 px-3 rounded-lg border border-slate-200 cursor-pointer" data-range="month">最近20天</button>
+                </div>
+            </div>
+
+            <!-- 导航菜单 -->
+            <nav class="flex-1 p-4 overflow-y-auto">
+                <p class="text-xs text-slate-500 mb-3 font-medium">数据分析</p>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="#" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="overview">
+                            <i class="fas fa-home w-5 text-center text-primary"></i>
+                            <span class="font-medium">网站概况</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="traffic">
+                            <i class="fas fa-chart-bar w-5 text-center text-slate-400"></i>
+                            <span>流量统计</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="traffic-analysis">
+                            <i class="fas fa-chart-area w-5 text-center text-slate-400"></i>
+                            <span>流量分析</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="visit">
+                            <i class="fas fa-users w-5 text-center text-slate-400"></i>
+                            <span>访问分析</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="source">
+                            <i class="fas fa-link w-5 text-center text-slate-400"></i>
+                            <span>来源分析</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 cursor-pointer" data-page="conversion">
+                            <i class="fas fa-exchange-alt w-5 text-center text-slate-400"></i>
+                            <span>转化分析</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- 用户信息 -->
+            <div class="p-4 border-t border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-slate-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-text">管理员</p>
+                        <p class="text-xs text-slate-400">admin@system.com</p>
+                    </div>
+                    <button id="logoutBtn" class="text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧内容区 -->
+        <main class="flex-1 ml-64 p-6">
+            <!-- 顶部标题栏 -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 id="pageTitle" class="text-2xl font-bold text-text">网站概况</h2>
+                    <p id="pageSubtitle" class="text-slate-500 mt-1">实时数据概览与关键指标</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="currentTime" class="text-sm text-slate-500"></span>
+                    <button class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <i class="fas fa-download mr-2"></i>导出报告
+                    </button>
+                </div>
+            </div>
+
+            <!-- 网站概况页面 -->
+            <div id="overviewPage" class="page-content">
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                    <div class="stat-card bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-sm">点赞量</span>
+                            <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heart text-red-500"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-text" id="stat-likes">18,437</p>
+                        <p class="text-xs text-green-500 mt-2"><i class="fas fa-arrow-up mr-1"></i>12.5%</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-sm">评论量</span>
+                            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-comment text-blue-500"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-text" id="stat-comments">2,614</p>
+                        <p class="text-xs text-green-500 mt-2"><i class="fas fa-arrow-up mr-1"></i>8.3%</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-sm">分享量</span>
+                            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-share text-green-500"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-text" id="stat-shares">3,451</p>
+                        <p class="text-xs text-green-500 mt-2"><i class="fas fa-arrow-up mr-1"></i>15.2%</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-sm">主页浏览量</span>
+                            <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-eye text-purple-500"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-text" id="stat-views">2,840</p>
+                        <p class="text-xs text-red-500 mt-2"><i class="fas fa-arrow-down mr-1"></i>3.1%</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-sm">播放量</span>
+                            <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-play text-orange-500"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-text" id="stat-plays">77,210</p>
+                        <p class="text-xs text-green-500 mt-2"><i class="fas fa-arrow-up mr-1"></i>22.7%</p>
+                    </div>
+                </div>
+
+                <!-- 趋势图 -->
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-text">数据趋势</h3>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 bg-primary rounded-full"></span>播放量</span>
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 bg-red-400 rounded-full"></span>点赞量</span>
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 bg-green-400 rounded-full"></span>评论量</span>
+                        </div>
+                    </div>
+                    <canvas id="trendChart" height="100"></canvas>
+                </div>
+
+                <!-- 快捷操作 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-r from-primary to-secondary rounded-xl p-5 text-white">
+                        <h4 class="font-semibold mb-2">数据报表</h4>
+                        <p class="text-sm opacity-80 mb-4">查看详细数据分析报告</p>
+                        <button class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer">
+                            查看报表 <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-5 text-white">
+                        <h4 class="font-semibold mb-2">用户画像</h4>
+                        <p class="text-sm opacity-80 mb-4">分析用户行为特征</p>
+                        <button class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer">
+                            开始分析 <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-5 text-white">
+                        <h4 class="font-semibold mb-2">实时监控</h4>
+                        <p class="text-sm opacity-80 mb-4">实时数据流量监控</p>
+                        <button class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer">
+                            进入监控 <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 流量统计页面 -->
+            <div id="trafficPage" class="page-content hidden">
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+                    <h3 class="font-semibold text-text mb-4">流量统计</h3>
+                    <p class="text-slate-500">展示网站流量相关数据统计...</p>
+                    <div class="mt-6 grid grid-cols-3 gap-4">
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <p class="text-3xl font-bold text-primary">125,430</p>
+                            <p class="text-sm text-slate-500 mt-1">总访问量</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <p class="text-3xl font-bold text-green-500">8,542</p>
+                            <p class="text-sm text-slate-500 mt-1">独立访客</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <p class="text-3xl font-bold text-orange-500">3:24</p>
+                            <p class="text-sm text-slate-500 mt-1">平均停留</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 流量分析页面 -->
+            <div id="trafficAnalysisPage" class="page-content hidden">
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+                    <h3 class="font-semibold text-text mb-4">流量分析</h3>
+                    <p class="text-slate-500">深入分析流量来源与走势...</p>
+                </div>
+            </div>
+
+            <!-- 访问分析页面 -->
+            <div id="visitPage" class="page-content hidden">
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+                    <h3 class="font-semibold text-text mb-4">访问分析</h3>
+                    <p class="text-slate-500">用户访问行为深度分析...</p>
+                </div>
+            </div>
+
+            <!-- 来源分析页面 -->
+            <div id="sourcePage" class="page-content hidden">
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+                    <h3 class="font-semibold text-text mb-4">来源分析</h3>
+                    <p class="text-slate-500">流量来源渠道分析...</p>
+                </div>
+            </div>
+
+            <!-- 转化分析页面 -->
+            <div id="conversionPage" class="page-content hidden">
+                <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+                    <h3 class="font-semibold text-text mb-4">转化分析</h3>
+                    <p class="text-slate-500">用户转化漏斗分析...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 数据配置
+        const dataConfig = {
+            today: {
+                likes: 18437, comments: 2614, shares: 3451, views: 2840, plays: 77210,
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                playsData: [12000, 15000, 28000, 45000, 58000, 68000, 77210],
+                likesData: [3000, 4500, 7200, 10500, 13800, 16000, 18437],
+                commentsData: [400, 600, 950, 1400, 1800, 2200, 2614]
+            },
+            yesterday: {
+                likes: 16520, comments: 2380, shares: 3100, views: 2650, plays: 68500,
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                playsData: [10000, 13000, 25000, 40000, 52000, 61000, 68500],
+                likesData: [2800, 4000, 6500, 9500, 12500, 14500, 16520],
+                commentsData: [350, 550, 880, 1280, 1650, 2050, 2380]
+            },
+            week: {
+                likes: 128500, comments: 18200, shares: 24100, views: 19800, plays: 539000,
+                labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                playsData: [72000, 78000, 85000, 76000, 82000, 95000, 51000],
+                likesData: [17500, 19000, 21000, 18000, 19500, 23000, 10500],
+                commentsData: [2500, 2700, 3000, 2600, 2800, 3200, 1400]
+            },
+            month: {
+                likes: 368000, comments: 52200, shares: 69000, views: 56800, plays: 1544000,
+                labels: ['1日', '5日', '10日', '15日', '20日'],
+                playsData: [280000, 520000, 850000, 1150000, 1544000],
+                likesData: [65000, 120000, 195000, 265000, 368000],
+                commentsData: [9200, 17000, 27500, 37500, 52200]
+            }
+        };
+
+        let currentRange = 'today';
+        let trendChart = null;
+
+        // 登录处理
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                initChart();
+                updateTime();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('loginError').classList.add('hidden');
+                }, 3000);
+            }
+        });
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        });
+
+        // 时间筛选
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentRange = this.dataset.range;
+                updateData();
+            });
+        });
+
+        // 侧边栏导航
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('i').classList.remove('text-primary');
+                    i.querySelector('i').classList.add('text-slate-400');
+                });
+                this.classList.add('active');
+                this.querySelector('i').classList.remove('text-slate-400');
+                this.querySelector('i').classList.add('text-primary');
+                
+                const page = this.dataset.page;
+                showPage(page);
+            });
+        });
+
+        function showPage(page) {
+            const titles = {
+                overview: { title: '网站概况', subtitle: '实时数据概览与关键指标' },
+                traffic: { title: '流量统计', subtitle: '网站流量数据汇总' },
+                'traffic-analysis': { title: '流量分析', subtitle: '流量来源与走势分析' },
+                visit: { title: '访问分析', subtitle: '用户访问行为分析' },
+                source: { title: '来源分析', subtitle: '流量来源渠道分析' },
+                conversion: { title: '转化分析', subtitle: '用户转化漏斗分析' }
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[page].title;
+            document.getElementById('pageSubtitle').textContent = titles[page].subtitle;
+            
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById(page + 'Page').classList.remove('hidden');
+        }
+
+        function updateData() {
+            const data = dataConfig[currentRange];
+            document.getElementById('stat-likes').textContent = data.likes.toLocaleString();
+            document.getElementById('stat-comments').textContent = data.comments.toLocaleString();
+            document.getElementById('stat-shares').textContent = data.shares.toLocaleString();
+            document.getElementById('stat-views').textContent = data.views.toLocaleString();
+            document.getElementById('stat-plays').textContent = data.plays.toLocaleString();
+            
+            updateChart(data);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const data = dataConfig[currentRange];
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: '播放量',
+                            data: data.playsData,
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '点赞量',
+                            data: data.likesData,
+                            borderColor: '#F87171',
+                            backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '评论量',
+                            data: data.commentsData,
+                            borderColor: '#4ADE80',
+                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateChart(data) {
+            if (trendChart) {
+                trendChart.data.labels = data.labels;
+                trendChart.data.datasets[0].data = data.playsData;
+                trendChart.data.datasets[1].data = data.likesData;
+                trendChart.data.datasets[2].data = data.commentsData;
+                trendChart.update();
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('zh-CN', options);
+        }
+
+        // 初始化时间显示
+        updateTime();
+        setInterval(updateTime, 60000);
+    </script>
+</body>
+</html>
